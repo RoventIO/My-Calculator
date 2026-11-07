@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DOMCraft - Custom HTML Parser to DOM Tree Studio</title>
+  <link rel="stylesheet" href="/src/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header Bar -->
+  <header class="app-header">
+    <div class="brand-section">
+      <div class="brand-logo">◬</div>
+      <div>
+        <h1 class="brand-title">DOMCraft</h1>
+      </div>
+      <span class="brand-badge">Engine v1.0</span>
+    </div>
+
+    <!-- Live Performance Stats -->
+    <div class="stats-bar" id="stats-bar">
+      <div class="stat-item">
+        <span>⏱️ Parse:</span>
+        <span class="stat-val" id="stat-time">0.00 ms</span>
+      </div>
+      <div class="stat-item">
+        <span>🌲 Total Nodes:</span>
+        <span class="stat-val" id="stat-nodes">0</span>
+      </div>
+      <div class="stat-item">
+        <span>🏷️ Elements:</span>
+        <span class="stat-val" id="stat-elements">0</span>
+      </div>
+      <div class="stat-item">
+        <span>📐 Depth:</span>
+        <span class="stat-val" id="stat-depth">0</span>
+      </div>
+    </div>
+
+    <!-- Header Actions -->
+    <div class="header-actions">
+      <select id="preset-select" class="select-input">
+        <option value="landingPage">Preset: SaaS Landing Page</option>
+        <option value="dashboard">Preset: Admin Dashboard</option>
+        <option value="malformed">Preset: Fault-Tolerant Malformed HTML</option>
+        <option value="scriptAndEntities">Preset: Scripts &amp; Entities</option>
+      </select>
+      <button id="btn-export-json" class="btn btn-secondary">
+        <span>📦 Export JSON</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- App Main Split -->
+  <main class="app-body">
+    <!-- Left Column: Source Code Input -->
+    <section class="left-panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>📄</span>
+          <span>HTML Source</span>
+        </div>
+        <div class="panel-actions">
+          <button id="btn-format" class="btn btn-outline btn-sm" title="Reformat HTML">Format</button>
+          <button id="btn-clear" class="btn btn-outline btn-sm" title="Clear HTML">Clear</button>
+          <button id="btn-parse" class="btn btn-primary btn-sm">▶ Parse DOM</button>
+        </div>
+      </div>
+
+      <!-- File Drop & Upload Zone -->
+      <div class="dropzone-bar" id="dropzone">
+        <div class="file-info" id="file-info">
+          <span>📁 Drag &amp; drop any <strong>.html</strong> file here, or</span>
+          <label for="file-input" class="btn btn-secondary btn-sm" style="cursor: pointer; margin-left: 6px;">Browse File</label>
+          <input type="file" id="file-input" accept=".html,.htm" style="display: none;">
+        </div>
+        <span id="active-filename" class="file-name">preset: landingPage</span>
+      </div>
+
+      <!-- Editor Area -->
+      <div class="editor-container">
+        <div class="line-numbers" id="line-numbers">1</div>
+        <textarea id="html-editor" class="code-textarea" spellcheck="false" placeholder="Paste or write your HTML here..."></textarea>
+      </div>
+    </section>
+
+    <!-- Right Column: Interactive DOM Tree & Tools -->
+    <section class="right-panel">
+      <!-- Tabs Navigation -->
+      <nav class="tabs-nav">
+        <button class="tab-btn active" data-tab="tab-tree">
+          <span>🌳</span>
+          <span>DOM Tree</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-inspector">
+          <span>🔍</span>
+          <span>Node Inspector</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-query">
+          <span>🧪</span>
+          <span>Query Playground</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-tokens">
+          <span>⚡</span>
+          <span>Lexer Tokens</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-ast">
+          <span>📦</span>
+          <span>JSON AST</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-compare">
+          <span>⚖️</span>
+          <span>DOM Parity</span>
+        </button>
+      </nav>
+
+      <!-- Tab 1: DOM Tree Visualizer -->
+      <div class="tab-content active" id="tab-tree">
+        <div class="tree-toolbar">
+          <div class="tree-search">
+            <span class="tree-search-icon">🔍</span>
+            <input type="text" id="tree-search-input" placeholder="Filter nodes (e.g. div, .btn, #hero)...">
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button id="btn-expand-all" class="btn btn-outline btn-sm">Expand All</button>
+            <button id="btn-collapse-all" class="btn btn-outline btn-sm">Collapse All</button>
+          </div>
+        </div>
+        <div class="tree-canvas" id="tree-canvas">
+          <!-- Tree nodes rendered here -->
+        </div>
+      </div>
+
+      <!-- Tab 2: Node Inspector -->
+      <div class="tab-content" id="tab-inspector">
+        <div class="inspector-layout" id="inspector-content">
+          <div class="breadcrumbs" id="inspector-breadcrumbs">
+            <span style="color: var(--text-faint)">Click any node in the DOM Tree to inspect details.</span>
+          </div>
+
+          <div class="props-grid" id="inspector-summary-grid">
+            <div class="prop-card">
+              <div class="prop-label">Tag Name</div>
+              <div class="prop-value" id="insp-tag">-</div>
+            </div>
+            <div class="prop-card">
+              <div class="prop-label">Node Type</div>
+              <div class="prop-value" id="insp-type">-</div>
+            </div>
+            <div class="prop-card">
+              <div class="prop-label">ID</div>
+              <div class="prop-value" id="insp-id">-</div>
+            </div>
+            <div class="prop-card">
+              <div class="prop-label">Child Elements</div>
+              <div class="prop-value" id="insp-children-count">-</div>
+            </div>
+          </div>
+
+          <div class="card-box">
+            <div class="card-box-header">
+              <span>Attributes</span>
+              <span id="insp-attr-count">0 attributes</span>
+            </div>
+            <div class="card-box-body" style="padding: 0;">
+              <table class="attr-table">
+                <thead>
+                  <tr>
+                    <th style="width: 35%">Name</th>
+                    <th>Value</th>
+                  </tr>
+                </thead>
+                <tbody id="insp-attr-body">
+                  <tr><td colspan="2" style="color: var(--text-faint)">No attributes</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card-box">
+            <div class="card-box-header">
+              <span>JavaScript Query Example</span>
+              <button id="btn-copy-js" class="btn btn-outline btn-sm">Copy JS</button>
+            </div>
+            <div class="card-box-body">
+              <div class="code-snippet-box" id="insp-js-code">doc.querySelector(...)</div>
+            </div>
+          </div>
+
+          <div class="card-box">
+            <div class="card-box-header">
+              <span>Outer HTML</span>
+              <button id="btn-copy-outer-html" class="btn btn-outline btn-sm">Copy HTML</button>
+            </div>
+            <div class="card-box-body">
+              <div class="code-snippet-box" id="insp-outer-html"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: DOM Query Playground -->
+      <div class="tab-content" id="tab-query">
+        <div class="query-playground">
+          <div>
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 6px;">
+              TEST CSS SELECTORS AGAINST THE CUSTOM DOM TREE:
+            </label>
+            <div class="query-input-bar">
+              <input type="text" id="query-input" value="a.btn, .feature-card h3" placeholder="Enter selector e.g. nav a, #site-header, div.card > p">
+              <button id="btn-run-query" class="btn btn-primary">Run Query</button>
+            </div>
+          </div>
+
+          <div class="query-chips">
+            <span style="color: var(--text-faint)">Suggestions:</span>
+            <button class="query-chip" data-query="h1, h2, h3">All Headings</button>
+            <button class="query-chip" data-query="a[href]">All Links</button>
+            <button class="query-chip" data-query="img, input">Void Elements</button>
+            <button class="query-chip" data-query=".btn-primary">Primary Buttons</button>
+            <button class="query-chip" data-query="nav a:first-child">First Nav Link</button>
+            <button class="query-chip" data-query="[data-category]">Data Attributes</button>
+          </div>
+
+          <div class="card-box" style="flex: 1; display: flex; flex-direction: column;">
+            <div class="card-box-header">
+              <span id="query-result-count">Matches: 0</span>
+              <span id="query-exec-time" style="color: var(--color-primary)">0.00 ms</span>
+            </div>
+            <div class="card-box-body" id="query-results-body" style="flex: 1; overflow: auto;">
+              <!-- Results rendered here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 4: Lexer Token Stream -->
+      <div class="tab-content" id="tab-tokens">
+        <div class="token-table-wrap">
+          <table class="token-table">
+            <thead>
+              <tr>
+                <th style="width: 60px;">#</th>
+                <th style="width: 140px;">Token Type</th>
+                <th style="width: 120px;">Tag / Name</th>
+                <th>Attributes / Value</th>
+                <th style="width: 100px;">Location</th>
+              </tr>
+            </thead>
+            <tbody id="token-table-body">
+              <!-- Token rows rendered here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab 5: JSON AST Viewer -->
+      <div class="tab-content" id="tab-ast">
+        <div class="ast-container">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 13px; color: var(--text-muted);">DOM Tree AST (JavaScript Object Notation):</span>
+            <div style="display: flex; gap: 8px;">
+              <button id="btn-copy-ast" class="btn btn-outline btn-sm">Copy JSON</button>
+              <button id="btn-download-ast" class="btn btn-primary btn-sm">Download .json</button>
+            </div>
+          </div>
+          <div class="ast-json-box" id="ast-json-box">
+            <!-- JSON output rendered here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 6: Native DOM vs Custom Comparison -->
+      <div class="tab-content" id="tab-compare">
+        <div class="comparison-grid">
+          <div class="comparison-card">
+            <h3>⚙️ Custom HTML Parser</h3>
+            <div class="prop-card">
+              <div class="prop-label">Total Elements Parsed</div>
+              <div class="prop-value" id="comp-custom-elements">-</div>
+            </div>
+            <div class="prop-card">
+              <div class="prop-label">Parse Time</div>
+              <div class="prop-value" id="comp-custom-time">-</div>
+            </div>
+            <div class="prop-card">
+              <div class="prop-label">Root Node</div>
+              <div class="prop-value" id="comp-custom-root">DocumentNode</div>
+            </div>
+            <div class="prop-card">
+              <div class="prop-label">Environment</div>
+              <div class="prop-value">Pure JS (Browser + Node.js)</div>
+            </div>
+          </div>
+
+          <div class="comparison-card">
+            <h3>🌐 Native Browser DOMParser()</h3>
+            <div class="prop-card">
+              <div class="prop-label">Total Elements Parsed</div>
+              <div class="prop-value" id="comp-native-elements">-</div>
+            </div>
+            <div class="prop-card">
+              <div class="prop-label">Parse Time</div>
+              <div class="prop-value" id="comp-native-time">-</div>
+            </div>
+            <div class="prop-card">
+              <div class="prop-label">Root Node</div>
+              <div class="prop-value" id="comp-native-root">HTMLDocument</div>
+            </div>
+            <div class="prop-card">
+              <div class="prop-label">Status</div>
+              <div class="prop-value" id="comp-status" style="color: var(--color-success)">Structural Parity: 100%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/src/app.js"></script>
+</body>
+</html>

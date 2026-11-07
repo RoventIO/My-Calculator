@@ -1,0 +1,61 @@
+<div class="dashboard-wrapper" id="admin-panel">
+  <aside class="sidebar">
+    <div class="user-profile">
+      <img src="/avatars/admin.png" alt="Admin Avatar" class="avatar-round">
+      <span class="user-name">Robert Vance</span>
+      <span class="user-role badge">Administrator</span>
+    </div>
+    <ul class="nav-list">
+      <li class="active"><a href="/dashboard">Overview</a></li>
+      <li><a href="/analytics">Analytics</a></li>
+      <li><a href="/settings">Settings</a></li>
+    </ul>
+  </aside>
+
+  <main class="main-panel">
+    <header class="panel-header">
+      <h2>System Performance Metrics</h2>
+      <button class="btn btn-primary" id="refresh-btn">Refresh Stats</button>
+    </header>
+
+    <div class="metrics-grid">
+      <div class="metric-card" data-metric="cpu">
+        <h4>CPU Usage</h4>
+        <span class="metric-value">42.8%</span>
+        <div class="progress-bar" style="width: 42.8%"></div>
+      </div>
+      <div class="metric-card" data-metric="memory">
+        <h4>RAM Usage</h4>
+        <span class="metric-value">12.4 GB / 32 GB</span>
+      </div>
+    </div>
+
+    <section class="table-container">
+      <h3>Active User Sessions</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>IP Address</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Alice Smith</td>
+            <td>192.168.1.101</td>
+            <td><span class="status-online">Active</span></td>
+            <td><button class="btn btn-sm">Inspect</button></td>
+          </tr>
+          <tr>
+            <td>Bob Johnson</td>
+            <td>192.168.1.105</td>
+            <td><span class="status-idle">Idle</span></td>
+            <td><button class="btn btn-sm">Inspect</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</div>

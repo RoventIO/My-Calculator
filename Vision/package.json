@@ -1,0 +1,26 @@
+{
+  "name": "html-to-dom-parser",
+  "version": "1.0.0",
+  "description": "Custom HTML parser that converts HTML into a DOM tree for JavaScript programs with an interactive web visualizer.",
+  "type": "module",
+  "main": "src/parser/index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "html-parser",
+    "dom-tree",
+    "lexer",
+    "ast",
+    "query-selector"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "vitest": "^1.0.0"
+  }
+}
